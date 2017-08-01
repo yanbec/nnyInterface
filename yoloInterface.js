@@ -4,6 +4,11 @@ var fs = require('fs');
 var dgram = require('dgram');
 var nconf = require('nconf');
 
+
+//Stuff
+var frame = 0;
+var IntervalIDs = [false, false];
+
 nconf.use('file', { file: './config.json' });
 nconf.load();
 
@@ -25,11 +30,35 @@ app.get("/", function (req, res) {
 		});
 	});
 
-app.get("/color/:device/:color", function(req, res) {
+app.get("/:device/color/:color", function(req, res) {
+	if (IntervalIDs[req.params.device]) {
+		clearInterval(IntervalIDs[req.params.device]);
+		IntervalIDs[req.params.device] = false;
+	}
 	console.log("Setting color: "+req.params.color.toString());
 	setColor(req.params.color, req.params.device);
 	res.writeHead(200, {'Content-Type': 'text/html'});
 	res.end();
+	});
+
+app.get("/:device/pattern", function(req, res) {
+	console.log("Pattern on device " + req.params.device);
+	if (IntervalIDs[req.params.device]) {
+		clearInterval(IntervalIDs[req.params.device]);
+		IntervalIDs[req.params.device] = false;
+	}
+	IntervalIDs[req.params.device] = setInterval(function() {
+			if (frame == 0) {
+				setColor("000000", req.params.device);
+				frame++
+			}
+			else {
+				setColor("0000FF", req.params.device);
+				frame = 0;
+			}
+		
+				
+		}, 500, req.params.device);
 	});
 
 app.listen(8080, function() {
@@ -39,17 +68,18 @@ app.listen(8080, function() {
 
 function setColor(colorHex, device) {
 	console.log("Setting Color: " + colorHex);
-	var bufstring = "000000";
-	for (let i = 0; i < 128; i++) {
+	var bufstring = "";
+	var ledCount = getLedCount(device);
+	for (let i = 0; i < ledCount; i++) {
 		bufstring+=colorHex;
 	}
-	sendUDP(Buffer.from(bufstring, "hex"), getIP(device), getPort(device));
+	sendUDP(bufstring, getIP(device), getPort(device));
 }
 
-function sendUDP(buf, ip, port) {
+function sendUDP(bufstring, ip, port) {
 	console.log("Sending to " + ip + ":" + port);
-	console.log("Buffer: "+buf.toString());
 	var client = dgram.createSocket('udp4');
+	var buf = Buffer.from("000000" + bufstring, "hex"); // Initial 3 bytes are ignored
 	client.send(buf, 0, buf.length, port, ip, function(err, bytes) {
 		if (err) throw err;
 		console.log('Sent.');
@@ -64,6 +94,11 @@ function getIP(device) {
 
 function getPort(device) {
 	return nconf.get('devices:'+device+':port');
+}
+
+function getLedCount(device) {
+	console.log("LedCount: " + nconf.get('devices:'+device+':ledCount'));
+	return nconf.get('devices:'+device+':ledCount');
 }
 
 
