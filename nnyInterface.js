@@ -39,34 +39,59 @@ app.get("/:device/color/:color", function(req, res) {
 	res.end();
 });
 
-app.get("/:device/pattern/:pattern/:speed", function(req, res) {
+app.get("/:device/pattern/:pattern/:color/:speed", function(req, res) {
 	var device = req.params.device;
 	var pattern = req.params.pattern;
+	var color = req.params.color;
 	var speed = req.params.speed;
 	resetInterval(device);
-	setPattern(pattern, device, speed);
+	setPattern(pattern, device, color, speed);
+	res.writeHead(200, {'Content-Type': 'text/html'});
+	res.end();
 });
 
 app.listen(8080, function() {
 	console.log("Server started.");
 });
 
-function setPattern(pattern, device, speed) {
+function setPattern(pattern, device, color, speed) {
+	frame[device] = 0;
 	var delay = (1/speed)*3000;
 	switch(pattern) {
 		case "blink":
-		IntervalIDs[device] = setInterval(function() {
-			if (frame[device] == 0) {
-				setColor("000000", device);
-				frame[device]++
-			}
-			else {
-				setColor("0000FF", device);
-				frame[device] = 0;
-			}
-		}, delay);
+			setPatternBlink(device, color, delay);
+		break;
+		case "runningLight":
+			setPatternRunningLight(device, color, delay);
 		break;
 	}
+}
+
+function setPatternBlink(device, color, delay) {
+	IntervalIDs[device] = setInterval(function() {
+		if (frame[device] == 0) {
+			setColor("000000", device);
+			frame[device]++
+		}
+		else {
+			setColor(color, device);
+			frame[device] = 0;
+		}
+	}, delay);
+}
+
+function setPatternRunningLight(device, color, delay) {
+	IntervalIDs[device] = setInterval(function() {
+			console.log("Device: " + device);
+			var ledCount = getLedCount(device);
+			if (frame[device] == ledCount)
+				frame[device] = 0;
+			console.log("LedCount: " + ledCount + " framedev: " + frame[device]);
+			var bufstring = "000000".repeat(frame[device])
+						+ color + "000000".repeat(ledCount-frame[device]-1);
+			sendToDevice(device, bufstring);
+			frame[device]++;
+	}, delay);
 }
 
 function resetInterval(device) {
@@ -78,11 +103,12 @@ function resetInterval(device) {
 
 function setColor(colorHex, device) {
 	console.log("Setting Color: " + colorHex);
-	var bufstring = "";
-	var ledCount = getLedCount(device);
-	for (let i = 0; i < ledCount; i++) {
-		bufstring+=colorHex;
-	}
+	var bufstring = colorHex.repeat(getLedCount(device));
+	sendToDevice(device, bufstring);
+}
+
+function sendToDevice(device, bufstring) {
+	console.log("Sending: " + bufstring);
 	sendUDP(bufstring, getIP(device), getPort(device));
 }
 
