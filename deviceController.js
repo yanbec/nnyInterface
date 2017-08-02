@@ -2,14 +2,17 @@ var dgram = require('dgram');
 var nconf = require('nconf');
 
 //Stuff
-var frame = [0, 0];
-var IntervalIDs = [0, 0];
+var frame = [];
+var IntervalIDs = [];
 
 nconf.use('file', { file: './config.json' });
 nconf.load();
 
+//Export functions
   exports.resetInterval = resetInterval;
   exports.setColor = setColor;
+  exports.setPattern = setPattern;
+
   function resetInterval(device) {
   	if (IntervalIDs[device]) {
   		clearInterval(IntervalIDs[device]);
