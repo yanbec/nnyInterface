@@ -6,8 +6,8 @@ var nconf = require('nconf');
 
 
 //Stuff
-var frame = 0;
-var IntervalIDs = [false, false];
+var frame = [0, 0];
+var IntervalIDs = [0, 0];
 
 nconf.use('file', { file: './config.json' });
 nconf.load();
@@ -28,6 +28,7 @@ app.get("/", function (req, res) {
 		res.writeHead(200, {'Content-Type': 'text/html'});
 		res.end(data);
 		});
+		console.log("/ served.");
 	});
 
 app.get("/:device/color/:color", function(req, res) {
@@ -43,21 +44,22 @@ app.get("/:device/color/:color", function(req, res) {
 
 app.get("/:device/pattern", function(req, res) {
 	console.log("Pattern on device " + req.params.device);
-	if (IntervalIDs[req.params.device]) {
-		clearInterval(IntervalIDs[req.params.device]);
-		IntervalIDs[req.params.device] = false;
+	var device = req.params.device;
+	if (IntervalIDs[device]) {
+		clearInterval(IntervalIDs[device]);
+		IntervalIDs[device] = false;
 	}
-	IntervalIDs[req.params.device] = setInterval(function() {
-			if (frame == 0) {
+	IntervalIDs[device] = setInterval(function() {
+			if (frame[device] == 0) {
 				setColor("000000", req.params.device);
-				frame++
+				frame[device]++
 			}
 			else {
 				setColor("0000FF", req.params.device);
-				frame = 0;
+				frame[device] = 0;
 			}
-		
-				
+
+
 		}, 500, req.params.device);
 	});
 
@@ -100,9 +102,3 @@ function getLedCount(device) {
 	console.log("LedCount: " + nconf.get('devices:'+device+':ledCount'));
 	return nconf.get('devices:'+device+':ledCount');
 }
-
-
-
-
-
-
