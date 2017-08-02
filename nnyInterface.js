@@ -27,46 +27,54 @@ app.get("/", function (req, res) {
 	fs.readFile('gui/index.html', function(err, data) {
 		res.writeHead(200, {'Content-Type': 'text/html'});
 		res.end(data);
-		});
-		console.log("/ served.");
 	});
+	console.log("/ served.");
+});
 
 app.get("/:device/color/:color", function(req, res) {
-	if (IntervalIDs[req.params.device]) {
-		clearInterval(IntervalIDs[req.params.device]);
-		IntervalIDs[req.params.device] = false;
-	}
+	resetInterval(req.params.device);
 	console.log("Setting color: "+req.params.color.toString());
 	setColor(req.params.color, req.params.device);
 	res.writeHead(200, {'Content-Type': 'text/html'});
 	res.end();
-	});
+});
 
-app.get("/:device/pattern", function(req, res) {
-	console.log("Pattern on device " + req.params.device);
+app.get("/:device/pattern/:pattern/:speed", function(req, res) {
 	var device = req.params.device;
+	var pattern = req.params.pattern;
+	var speed = req.params.speed;
+	resetInterval(device);
+	setPattern(pattern, device, speed);
+});
+
+app.listen(8080, function() {
+	console.log("Server started.");
+});
+
+function setPattern(pattern, device, speed) {
+	var delay = (1/speed)*3000;
+	switch(pattern) {
+		case "blink":
+		IntervalIDs[device] = setInterval(function() {
+			if (frame[device] == 0) {
+				setColor("000000", device);
+				frame[device]++
+			}
+			else {
+				setColor("0000FF", device);
+				frame[device] = 0;
+			}
+		}, delay);
+		break;
+	}
+}
+
+function resetInterval(device) {
 	if (IntervalIDs[device]) {
 		clearInterval(IntervalIDs[device]);
 		IntervalIDs[device] = false;
 	}
-	IntervalIDs[device] = setInterval(function() {
-			if (frame[device] == 0) {
-				setColor("000000", req.params.device);
-				frame[device]++
-			}
-			else {
-				setColor("0000FF", req.params.device);
-				frame[device] = 0;
-			}
-
-
-		}, 500, req.params.device);
-	});
-
-app.listen(8080, function() {
-	console.log("Server started.");
-	});
-
+}
 
 function setColor(colorHex, device) {
 	console.log("Setting Color: " + colorHex);
@@ -86,8 +94,8 @@ function sendUDP(bufstring, ip, port) {
 		if (err) throw err;
 		console.log('Sent.');
 		client.close();
-		}
-	);
+	}
+);
 }
 
 function getIP(device) {
