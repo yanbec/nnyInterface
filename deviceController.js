@@ -31,6 +31,9 @@ function setPattern(pattern, device, color, speed) {
 		case "runningLight":
 			setPatternRunningLight(device, color, delay);
 		break;
+    case "filling":
+      setPatternFilling(device, color, delay);
+    break;
 	}
 }
 
@@ -59,6 +62,20 @@ function setPatternRunningLight(device, color, delay) {
 			sendToDevice(device, bufstring);
 			frame[device]++;
 	}, delay);
+}
+
+function setPatternFilling(device, color, delay) {
+  IntervalIDs[device] = setInterval(function() {
+      console.log("Device: " + device);
+      var ledCount = getLedCount(device);
+      if (frame[device] == ledCount)
+        frame[device] = 0;
+      console.log("LedCount: " + ledCount + " framedev: " + frame[device]);
+      var bufstring = color.repeat(frame[device])
+            + "000000".repeat(ledCount-frame[device]);
+      sendToDevice(device, bufstring);
+      frame[device]++;
+  }, delay);
 }
 
 
