@@ -32,11 +32,14 @@ function setPattern(pattern, device, color, speed) {
 		case "runningLight":
 			setPatternRunningLight(device, color, delay);
 		break;
-    case "filling":
-      setPatternFilling(device, color, delay);
+    case "fillAll":
+      setPatternFillAll(device, color, delay);
     break;
     case "fadeAll":
       setPatternFadeAll(device, delay);
+    break;
+    case "knightrider":
+      setPatternKnightrider(device, color);
     break;
 	}
 }
@@ -68,7 +71,7 @@ function setPatternRunningLight(device, color, delay) {
 	}, delay);
 }
 
-function setPatternFilling(device, color, delay) {
+function setPatternFillAll(device, color, delay) {
   IntervalIDs[device] = setInterval(function() {
       console.log("Device: " + device);
       var ledCount = getLedCount(device);
@@ -103,6 +106,26 @@ function setPatternFadeAll(device, delay) {
       sendToDevice(device, bufstring);
       frame[device]++;
   }, delay);
+}
+
+function setPatternKnightrider(device, color) {
+  IntervalIDs[device] = setInterval(function() {
+      var ledCount = getLedCount(device);
+      var ledsToLight = Math.round(ledCount/5);
+      var maxFrame = (ledCount-ledsToLight)*2;
+      if (frame[device] == maxFrame)
+        frame[device] = 0;
+      if (frame[device] < maxFrame/2)
+        var bufstring = "000000".repeat(frame[device]) + color.repeat(ledsToLight)
+        + "000000".repeat(ledCount-ledsToLight-frame[device]);
+      else {
+        var bufstring = "000000".repeat(ledCount-ledsToLight-frame[device]+maxFrame/2)
+          + color.repeat(ledsToLight) + "000000".repeat(frame[device]-(maxFrame/2));
+      }
+
+      sendToDevice(device, bufstring);
+      frame[device]++;
+  }, 1000/getLedCount(device));
 }
 
 
