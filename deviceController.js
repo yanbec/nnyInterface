@@ -4,6 +4,7 @@ var nconf = require('nconf');
 //Stuff
 var frame = [];
 var IntervalIDs = [];
+var patternTemp = [];
 
 nconf.use('file', { file: './config.json' });
 nconf.load();
@@ -33,6 +34,9 @@ function setPattern(pattern, device, color, speed) {
 		break;
     case "filling":
       setPatternFilling(device, color, delay);
+    break;
+    case "fadeAll":
+      setPatternFadeAll(device, delay);
     break;
 	}
 }
@@ -78,6 +82,29 @@ function setPatternFilling(device, color, delay) {
   }, delay);
 }
 
+function setPatternFadeAll(device, delay) {
+  IntervalIDs[device] = setInterval(function() {
+      var ledCount = getLedCount(device);
+      var color = "000000";
+      if (frame[device] == 300)
+        frame[device] = 0;
+
+      if (frame[device] < 100)
+        color = colorPercentToHex(100-frame[device])
+          + colorPercentToHex(frame[device]) + "00";
+      else if (frame[device] >= 100 && frame[device] < 200)
+        color = "00" + colorPercentToHex(200-frame[device])
+          + colorPercentToHex(frame[device]-100);
+      else if (frame[device] >= 200 && frame[device] < 300)
+        color = colorPercentToHex(frame[device]-200) + "00"
+          + colorPercentToHex(300-frame[device]);
+
+      bufstring = color.repeat(ledCount);
+      sendToDevice(device, bufstring);
+      frame[device]++;
+  }, delay);
+}
+
 
 
 function setColor(colorHex, device) {
@@ -114,4 +141,15 @@ function getPort(device) {
 function getLedCount(device) {
 	console.log("LedCount: " + nconf.get('devices:'+device+':ledCount'));
 	return nconf.get('devices:'+device+':ledCount');
+}
+
+function colorPercentToHex(color) {
+  if (color > 100)
+    return 100;
+  if (color < 0)
+    return 0;
+    var hex = Math.round(color*2.55).toString(16);
+    if (hex.length < 2)
+      hex = "0" + hex;
+  return hex;
 }
