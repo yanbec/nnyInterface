@@ -1,15 +1,12 @@
-const configFile = "./config.json";
-
 var dgram = require('dgram');
 var nconf = require('nconf');
-
+var config = require('./config')
 //Stuff
 var frame = [];
 var IntervalIDs = [];
 var patternTemp = [];
 
-nconf.use('file', { file: configFile });
-nconf.load();
+
 
 //Export functions
   exports.resetInterval = resetInterval;
@@ -156,16 +153,15 @@ function sendUDP(bufstring, ip, port) {
 }
 
 function getIP(device) {
-	return nconf.get('devices:'+device+':ip');
+	return config.getDeviceConfig(device).ip;
 }
 
 function getPort(device) {
-	return nconf.get('devices:'+device+':port');
+	return config.getDeviceConfig(device).port;
 }
 
 function getLedCount(device) {
-	console.log("LedCount: " + nconf.get('devices:'+device+':ledCount'));
-	return nconf.get('devices:'+device+':ledCount');
+  return config.getDeviceConfig(device).ledCount;
 }
 
 function colorPercentToHex(color) {

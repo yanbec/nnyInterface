@@ -1,7 +1,8 @@
 var express = require('express');
 var app = express();
 var fs = require('fs');
-var controller = require('./deviceController.js');
+var controller = require('./deviceController');
+var config = require('./config');
 
 app.get("/", function (req, res) {
 	fs.readFile('api-example/index.html', function(err, data) {
@@ -30,6 +31,21 @@ app.get("/:device/pattern/:pattern/:color/:speed", function(req, res) {
 	res.end();
 });
 
-app.listen(8080, function() {
+app.get("/config/get/general", function(req, res) {
+	convertToJSONResult(res, config.getGeneralConfig());
+});
+
+app.get("/config/get/device/:device", function(req, res) {
+	convertToJSONResult(res, config.getDeviceConfig(req.params.device));
+});
+
+
+app.listen(config.getGeneralConfig().port, function() {
 	console.log("Server started.");
 });
+
+function convertToJSONResult(res, content) {
+	res.writeHead(200, {'Content-Type' : 'application/json'});
+	res.write(JSON.stringify(content));
+	res.end();
+}
