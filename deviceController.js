@@ -1,3 +1,5 @@
+const configFile = "./config.json";
+
 var dgram = require('dgram');
 var nconf = require('nconf');
 
@@ -6,7 +8,7 @@ var frame = [];
 var IntervalIDs = [];
 var patternTemp = [];
 
-nconf.use('file', { file: './config.json' });
+nconf.use('file', { file: configFile });
 nconf.load();
 
 //Export functions

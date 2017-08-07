@@ -4,7 +4,7 @@ var fs = require('fs');
 var controller = require('./deviceController.js');
 
 app.get("/", function (req, res) {
-	fs.readFile('gui/index.html', function(err, data) {
+	fs.readFile('api-example/index.html', function(err, data) {
 		res.writeHead(200, {'Content-Type': 'text/html'});
 		res.end(data);
 	});
