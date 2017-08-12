@@ -5,7 +5,15 @@ var fs = require('fs');
 var controller = require('./deviceController');
 var config = require('./config');
 
+
 app.use(cors());
+app.use(function(req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    next();
+});
 
 app.get("/", function(req, res) {
     fs.readFile('api-example/index.html', function(err, data) {
@@ -43,6 +51,7 @@ app.get("/config/get/device/:device", function(req, res) {
 
 app.listen(config.getGeneralConfig().port, function() {
     console.log("Server started on " + config.getGeneralConfig().port);
+
 });
 
 function convertToJSONResult(res, content) {
