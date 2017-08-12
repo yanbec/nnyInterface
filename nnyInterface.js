@@ -12,12 +12,10 @@ app.get("/", function(req, res) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(data);
     });
-    console.log("/ served.");
 });
 
 app.get("/:device/color/:color", function(req, res) {
     controller.resetInterval(req.params.device);
-    console.log("Setting color: " + req.params.color.toString());
     controller.setColor(req.params.color, req.params.device);
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end();
@@ -44,7 +42,7 @@ app.get("/config/get/device/:device", function(req, res) {
 
 
 app.listen(config.getGeneralConfig().port, function() {
-    console.log("Server started.");
+    console.log("Server started on " + config.getGeneralConfig().port);
 });
 
 function convertToJSONResult(res, content) {
